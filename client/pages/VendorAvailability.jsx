@@ -37,13 +37,18 @@ export default function VendorAvailability() {
       });
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not add rule');
+      setError(err.response?.data?.message || 'Could not add rule');
     }
   }
 
   async function deleteRule(id) {
-    await client.delete(`/services/rules/${id}`);
-    load();
+    setError('');
+    try {
+      await client.delete(`/services/rules/${id}`);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not remove rule');
+    }
   }
 
   async function addException(e) {
@@ -57,13 +62,18 @@ export default function VendorAvailability() {
       });
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not add exception');
+      setError(err.response?.data?.message || 'Could not add exception');
     }
   }
 
   async function deleteException(id) {
-    await client.delete(`/services/exceptions/${id}`);
-    load();
+    setError('');
+    try {
+      await client.delete(`/services/exceptions/${id}`);
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not remove exception');
+    }
   }
 
   return (

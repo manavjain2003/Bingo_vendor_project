@@ -27,7 +27,7 @@ export default function SignUp() {
       await signup(payload);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Signup failed');
+      setError(err.response?.data?.message || 'Signup failed');
     } finally {
       setSubmitting(false);
     }

@@ -75,7 +75,7 @@ npm run seed
 npm run concurrencyTest
 ```
 
-This fires 20 simultaneous booking requests at a freshly-generated slot and prints how many succeeded vs. got a clean `409`. Sample output is in `backend/scripts/concurrency-test-output.txt`.
+This fires 20 simultaneous booking requests at a freshly-generated slot and prints how many succeeded vs. got a clean `409`.
 
 ## Project structure
 

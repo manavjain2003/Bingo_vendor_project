@@ -20,7 +20,7 @@ export default function AdminVendors() {
       await client.patch(`/vendors/${id}/approve`);
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not approve');
+      setError(err.response?.data?.message || 'Could not approve');
     }
   }
 
@@ -32,7 +32,7 @@ export default function AdminVendors() {
       await client.patch(`/vendors/${id}/reject`, { reason });
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not reject');
+      setError(err.response?.data?.message || 'Could not reject');
     }
   }
 

@@ -32,7 +32,7 @@ export default function AdminRoles() {
       setSelectedPermissions([]);
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not create role');
+      setError(err.response?.data?.message || 'Could not create role');
     }
   }
 
@@ -70,7 +70,7 @@ export default function AdminRoles() {
 
       {roles.map((role) => (
         <div className="card" key={role._id}>
-          <strong>{role.name}</strong> {role.isSystem && <span className="badge SUSPENDED">system</span>}
+          <strong>{role.name}</strong>
           <p style={{ fontSize: 13, color: '#6b7280' }}>{role.permissions.join(', ')}</p>
         </div>
       ))}

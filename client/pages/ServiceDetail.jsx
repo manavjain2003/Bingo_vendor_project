@@ -62,7 +62,7 @@ export default function ServiceDetail() {
       setSuccess('Booking created.');
       setTimeout(() => navigate(`/my-bookings`), 900);
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Booking failed');
+      setError(err.response?.data?.message || 'Booking failed');
     } finally {
       setBooking(false);
     }

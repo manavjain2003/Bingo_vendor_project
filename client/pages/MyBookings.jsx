@@ -26,7 +26,7 @@ export default function MyBookings() {
       await client.patch(`/bookings/${id}/cancel`, { reason: 'Customer requested cancellation' });
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not cancel');
+      setError(err.response?.data?.message || 'Could not cancel');
     }
   }
 

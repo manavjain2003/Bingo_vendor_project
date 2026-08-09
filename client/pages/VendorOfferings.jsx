@@ -32,13 +32,18 @@ export default function VendorOfferings() {
       setPrice('');
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not create offering');
+      setError(err.response?.data?.message || 'Could not create offering');
     }
   }
 
   async function toggleActive(offering) {
-    await client.patch(`/services/offerings/${offering._id}`, { active: !offering.active });
-    load();
+    setError('');
+    try {
+      await client.patch(`/services/offerings/${offering._id}`, { active: !offering.active });
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update offering');
+    }
   }
 
   return (

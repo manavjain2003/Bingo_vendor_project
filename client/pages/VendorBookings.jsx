@@ -26,7 +26,7 @@ export default function VendorBookings() {
       await client.patch(`/bookings/${id}/${action}`, {});
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || `Could not ${action}`);
+      setError(err.response?.data?.message || `Could not ${action}`);
     }
   }
 
@@ -36,7 +36,7 @@ export default function VendorBookings() {
       await client.patch(`/bookings/${id}/payment-collected`, {});
       load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not mark collected');
+      setError(err.response?.data?.message || 'Could not mark collected');
     }
   }
 
