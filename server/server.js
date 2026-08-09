@@ -17,7 +17,7 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const openapiSpec = YAML.load(path.join(__dirname, '..', 'openapi.yaml'));
+const openapiSpec = YAML.load(path.join(__dirname, 'api', 'openapi.yaml'));
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());

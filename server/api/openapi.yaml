@@ -1,0 +1,771 @@
+openapi: 3.0.3
+info:
+  title: Services Marketplace API
+  version: 1.0.0
+  description: Customer/vendor/admin services marketplace. Covers only MUST-tagged modules.
+servers:
+  - url: https://bingo-vendor-project.onrender.com/
+    description: Deployed instance
+  - url: http://localhost:5000
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  /auth/signup:
+    post:
+      summary: Register as a customer or vendor
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, baseRole]
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string, minLength: 8 }
+                baseRole: { type: string, enum: [CUSTOMER, VENDOR] }
+                vendorProfile:
+                  type: object
+                  properties:
+                    businessName: { type: string }
+                    contact: { type: string }
+                    address: { type: string }
+                    documents:
+                      type: array
+                      items: { type: string }
+      responses:
+        '201':
+          description: Account created, tokens issued
+        '409':
+          description: Email already registered
+
+  /auth/login:
+    post:
+      summary: Log in
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Tokens issued
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      summary: Exchange a refresh token for a new access + refresh token pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New tokens issued
+        '401':
+          description: Refresh token invalid, expired, or revoked
+
+  /auth/logout:
+    post:
+      summary: Revoke a refresh token
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '204':
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Return the caller's identity, role, and effective permissions
+      responses:
+        '200':
+          description: Current user
+
+  /vendors/me:
+    get:
+      summary: Get the current vendor's own profile and approval status
+      responses:
+        '200':
+          description: Vendor profile
+        '404':
+          description: Not a vendor
+
+  /vendors:
+    get:
+      summary: List vendor applications (requires vendor.view)
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Paginated vendor profiles
+
+  /vendors/{id}/approve:
+    patch:
+      summary: Approve a vendor application (requires vendor.approve)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Approved
+        '403':
+          description: Missing permission
+
+  /vendors/{id}/reject:
+    patch:
+      summary: Reject a vendor application with a reason (requires vendor.reject)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Rejected
+
+  /categories:
+    get:
+      summary: List categories (public)
+      security: []
+      responses:
+        '200':
+          description: List of categories
+    post:
+      summary: Create a category (requires category.create)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                parent: { type: string, nullable: true }
+      responses:
+        '201':
+          description: Created
+        '422':
+          description: Only two levels of nesting are allowed
+
+  /categories/{id}:
+    patch:
+      summary: Update a category (requires category.update)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete a category (requires category.delete)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  /services:
+    get:
+      summary: List published services from approved vendors (public, paginated, searchable, filterable)
+      security: []
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Paginated services
+    post:
+      summary: Create a service in DRAFT status (requires service.create, approved vendor)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, category]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                category: { type: string }
+                images:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201':
+          description: Created
+        '403':
+          description: Vendor not approved
+
+  /services/mine/list:
+    get:
+      summary: List the current vendor's own services
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [DRAFT, PUBLISHED, SUSPENDED] }
+      responses:
+        '200':
+          description: Paginated services
+
+  /services/{id}:
+    get:
+      summary: Get a single published service and its active offerings (public)
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Service, offerings, and vendor timezone offset
+        '404':
+          description: Not found or not published
+    patch:
+      summary: Update a service (requires service.update, ownership enforced)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+        '403':
+          description: Not your service
+    delete:
+      summary: Delete a service (requires service.delete, ownership enforced)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  /services/{id}/publish:
+    patch:
+      summary: Publish a service (requires service.publish, at least one active offering, approved vendor)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Published
+        '422':
+          description: No active offerings
+
+  /services/{id}/suspend:
+    patch:
+      summary: Suspend a service (requires service.suspend)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Suspended
+
+  /services/{serviceId}/offerings:
+    get:
+      summary: List offerings for a service (public)
+      security: []
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of offerings
+    post:
+      summary: Create an offering (requires offering.create, ownership enforced)
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, durationMinutes, priceMinorUnits]
+              properties:
+                name: { type: string }
+                durationMinutes: { type: integer, minimum: 5 }
+                priceMinorUnits: { type: integer, minimum: 0 }
+                currency: { type: string }
+      responses:
+        '201':
+          description: Created
+
+  /services/offerings/{id}:
+    patch:
+      summary: Update an offering (requires offering.update, ownership enforced)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete an offering (requires offering.delete, ownership enforced)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  /services/{serviceId}/rules:
+    get:
+      summary: List weekly availability rules for a service
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of rules
+    post:
+      summary: Add a weekly availability window (requires availability.update, ownership enforced)
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [weekday, startTime, endTime, capacity]
+              properties:
+                weekday: { type: integer, minimum: 0, maximum: 6 }
+                startTime: { type: string, example: "09:00" }
+                endTime: { type: string, example: "13:00" }
+                capacity: { type: integer, minimum: 1 }
+      responses:
+        '201':
+          description: Rule created
+
+  /services/rules/{id}:
+    delete:
+      summary: Remove a weekly availability rule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  /services/{serviceId}/exceptions:
+    get:
+      summary: List date exceptions for a service
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of exceptions
+    put:
+      summary: Create or update a date exception (requires availability.update, ownership enforced)
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, closed]
+              properties:
+                date: { type: string, example: "2026-08-15" }
+                closed: { type: boolean }
+                windows:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      startTime: { type: string }
+                      endTime: { type: string }
+                      capacity: { type: integer }
+      responses:
+        '200':
+          description: Exception upserted
+
+  /services/exceptions/{id}:
+    delete:
+      summary: Remove a date exception
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Deleted
+
+  /services/{serviceId}/slots:
+    get:
+      summary: Get bookable slots for a service and offering over a date range (public, derived from rules + exceptions)
+      security: []
+      parameters:
+        - in: path
+          name: serviceId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: offeringId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, example: "2026-08-10" }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, example: "2026-08-20" }
+      responses:
+        '200':
+          description: List of bookable slots with remaining capacity
+
+  /bookings:
+    post:
+      summary: Create a booking (requires booking.create, atomic capacity check)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slotId, offeringId, paymentMode]
+              properties:
+                slotId: { type: string }
+                offeringId: { type: string }
+                paymentMode: { type: string, enum: [PAY_NOW, PAY_AFTER] }
+                paymentToken: { type: string, example: "tok_fail | tok_delay | (anything else = success)" }
+      responses:
+        '201':
+          description: Booking created
+        '409':
+          description: Slot is fully booked
+    get:
+      summary: List the caller's own bookings (customer sees their own, vendor sees their own, admin sees all)
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer }
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Paginated bookings
+
+  /bookings/{id}:
+    get:
+      summary: Get a single booking, with ownership enforced
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Booking with history
+        '403':
+          description: Not your booking
+
+  /bookings/{id}/confirm:
+    patch:
+      summary: Vendor confirms a pending booking (requires booking.confirm)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Confirmed
+        '403':
+          description: Wrong role for this transition
+        '422':
+          description: Illegal transition for current status
+
+  /bookings/{id}/reject:
+    patch:
+      summary: Vendor rejects a pending booking (requires booking.reject)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Rejected
+
+  /bookings/{id}/complete:
+    patch:
+      summary: Vendor marks a confirmed booking complete (requires booking.complete)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Completed
+        '403':
+          description: Customer attempted this action
+        '422':
+          description: Booking was not CONFIRMED
+
+  /bookings/{id}/no-show:
+    patch:
+      summary: Vendor marks a confirmed booking as a no-show (requires booking.noshow)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Marked no-show
+
+  /bookings/{id}/cancel:
+    patch:
+      summary: Cancel a pending or confirmed booking (requires booking.cancel, respects cancellation window for customers)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Cancelled, slot seat released, refund issued if paid
+        '422':
+          description: Outside the free cancellation window
+
+  /bookings/{id}/reschedule:
+    patch:
+      summary: Customer moves a booking to a different slot (requires booking.reschedule)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newSlotId]
+              properties:
+                newSlotId: { type: string }
+      responses:
+        '200':
+          description: Rescheduled, old slot seat released, new slot seat reserved atomically
+        '409':
+          description: New slot is fully booked
+
+  /bookings/{id}/payment-collected:
+    patch:
+      summary: Vendor marks a PAY_AFTER booking as paid in cash (requires payment.markCollected)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Marked collected, a SUCCESS payment record is created
+
+  /payments/webhook:
+    post:
+      summary: Simulate an asynchronous payment provider callback (requires payment.webhook)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId, result]
+              properties:
+                paymentId: { type: string }
+                result: { type: string, enum: [SUCCESS, FAILED] }
+      responses:
+        '200':
+          description: Payment updated (idempotent - replays on an already-terminal payment are a no-op)
+
+  /payments/{id}:
+    get:
+      summary: Get a payment record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Payment
+
+  /roles:
+    get:
+      summary: List all roles and the available permission catalogue (requires role.create)
+      responses:
+        '200':
+          description: Roles and permission catalogue
+    post:
+      summary: Create a new role as a bundle of permissions (requires role.create)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, permissions]
+              properties:
+                name: { type: string }
+                permissions:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201':
+          description: Role created
+
+  /roles/{id}:
+    patch:
+      summary: Update a role's name or permissions (requires role.update, system roles are immutable)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Updated
+        '422':
+          description: System roles cannot be modified
+
+  /roles/assign:
+    post:
+      summary: Assign a role to a user (requires role.assign)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, roleId]
+              properties:
+                userId: { type: string }
+                roleId: { type: string }
+      responses:
+        '200':
+          description: Role assigned
