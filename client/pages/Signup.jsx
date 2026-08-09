@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Signup() {
+export default function SignUp() {
   const [baseRole, setBaseRole] = useState('CUSTOMER');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

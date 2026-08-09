@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
+import SignUp from './pages/SignUp';
 import Catalogue from './pages/Catalogue';
 import ServiceDetail from './pages/ServiceDetail';
 import MyBookings from './pages/MyBookings';
