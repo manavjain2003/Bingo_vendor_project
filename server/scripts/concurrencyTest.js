@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:4000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 const CUSTOMER_EMAIL = process.env.TEST_CUSTOMER_EMAIL || 'customer1@marketplace.test';
 const CUSTOMER_PASSWORD = process.env.TEST_CUSTOMER_PASSWORD || 'Password123!';
 const CONCURRENT_REQUESTS = 20;
