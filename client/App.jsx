@@ -21,7 +21,7 @@ export default function App() {
         <Route path="/" element={<Catalogue />} />
         <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={<SignUp />} />
 
         <Route
           path="/my-bookings"
