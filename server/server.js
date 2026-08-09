@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
+const roleRoutes = require('./routes/roleRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -13,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
-
+app.use('/vendors', vendorRoutes);
 app.use('/auth', authRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/services', serviceRoutes);
