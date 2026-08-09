@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { client } from '../api/baseApi';
 
@@ -9,6 +9,7 @@ export default function Catalogue() {
   const [q, setQ] = useState('');
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState('');
+  const [subCategory, setSubCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const limit = 9;
 
@@ -16,16 +17,25 @@ export default function Catalogue() {
     client.get('/categories').then((res) => setCategories(res.data.items));
   }, []);
 
+  const parentCategories = useMemo(() => categories.filter((c) => !c.parent), [categories]);
+
+  const subCategories = useMemo(
+    () => categories.filter((c) => c.parent && c.parent._id === category),
+    [categories, category]
+  );
+
+  const activeCategory = subCategory || category;
+
   useEffect(() => {
     setLoading(true);
     client
-      .get('/services', { params: { q: q || undefined, category: category || undefined, page, limit } })
+      .get('/services', { params: { q: q || undefined, category: activeCategory || undefined, page, limit } })
       .then((res) => {
         setItems(res.data.items);
         setTotal(res.data.total);
       })
       .finally(() => setLoading(false));
-  }, [q, category, page]);
+  }, [q, activeCategory, page]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -47,12 +57,28 @@ export default function Catalogue() {
           onChange={(e) => {
             setPage(1);
             setCategory(e.target.value);
+            setSubCategory('');
           }}
         >
           <option value="">All categories</option>
-          {categories.map((c) => (
+          {parentCategories.map((c) => (
             <option key={c._id} value={c._id}>
-              {c.parent ? `${c.parent.name} / ${c.name}` : c.name}
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={subCategory}
+          onChange={(e) => {
+            setPage(1);
+            setSubCategory(e.target.value);
+          }}
+          disabled={!category || subCategories.length === 0}
+        >
+          <option value="">All subcategories</option>
+          {subCategories.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.name}
             </option>
           ))}
         </select>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { client } from '../api/client';
+import { client } from '../api/baseApi';
 
 export default function AdminVendors() {
   const [items, setItems] = useState([]);
