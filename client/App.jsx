@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './component/Navbar';
 import Login from './pages/Login';
+import Signup from './pages/SignUp';
 
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Signup />} />
       </Routes>
     </div>
   );
