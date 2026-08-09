@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require('uuid'); 
 const User = require('../models/User');
 const Role = require('../models/Role');
 const VendorProfile = require('../models/VendorProfile');
