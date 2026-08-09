@@ -16,10 +16,10 @@ export default function Navbar() {
         Bingo Services
       </Link>
       <nav>
+        {user && user.baseRole === 'ADMIN' && <Link to="/admin/roles">Roles</Link>}
+        {user && user.baseRole === 'ADMIN' && <Link to="/admin/vendors">Vendors</Link>}
         {!user && <Link to="/login">Login</Link>}
         {!user && <Link to="/signup">Sign up</Link>}
-
-   
         {user && (
           <button className="secondary" style={{ marginLeft: 12 }} onClick={handleLogout}>
             Logout
