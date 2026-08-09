@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -15,7 +16,8 @@ app.use(express.json());
 
 app.use('/auth', authRoutes);
 app.use('/categories', categoryRoutes);
-app.use('/services', ser);
+app.use('/services', serviceRoutes);
+app.use('/roles', roleRoutes);
 
 // Connecting to MongoDB
 connectDB();
