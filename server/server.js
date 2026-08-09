@@ -8,6 +8,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const roleRoutes = require('./routes/roleRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -21,7 +22,8 @@ app.use('/auth', authRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/services', serviceRoutes);
 app.use('/roles', roleRoutes);
-app.use('/roles', bookingRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/payments', paymentRoutes);
 // Connecting to MongoDB
 connectDB();
 
