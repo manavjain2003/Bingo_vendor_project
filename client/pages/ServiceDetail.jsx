@@ -20,6 +20,7 @@ export default function ServiceDetail() {
   const [offerings, setOfferings] = useState([]);
   const [selectedOffering, setSelectedOffering] = useState('');
   const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [paymentMode, setPaymentMode] = useState('PAY_AFTER');
   const [paymentToken, setPaymentToken] = useState('');
@@ -39,9 +40,12 @@ export default function ServiceDetail() {
     if (!selectedOffering) return;
     const from = new Date().toISOString().slice(0, 10);
     const to = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+    setSlotsLoading(true);
+    setSelectedSlot(null);
     client
       .get(`/services/${id}/slots`, { params: { offeringId: selectedOffering, from, to } })
-      .then((res) => setSlots(res.data.items));
+      .then((res) => setSlots(res.data.items))
+      .finally(() => setSlotsLoading(false));
   }, [selectedOffering, id]);
 
   async function handleBook() {
@@ -90,17 +94,19 @@ export default function ServiceDetail() {
 
       <div className="card">
         <h3>Available slots (next 14 days)</h3>
-        {slots.length === 0 && <p style={{ color: '#6b7280' }}>No slots available in this window.</p>}
+        {slotsLoading && <p style={{ color: '#6b7280' }}>Loading slots...</p>}
+        {!slotsLoading && slots.length === 0 && <p style={{ color: '#6b7280' }}>No slots available in this window.</p>}
         <div className="slot-list">
-          {slots.map((slot) => (
-            <button
-              key={slot.id}
-              className={`slot-button ${selectedSlot === slot.id ? 'selected' : ''}`}
-              onClick={() => setSelectedSlot(slot.id)}
-            >
-              {formatDate(slot.startTime)} {formatTime(slot.startTime)} ({slot.remaining} left)
-            </button>
-          ))}
+          {!slotsLoading &&
+            slots.map((slot) => (
+              <button
+                key={slot.id}
+                className={`slot-button ${selectedSlot === slot.id ? 'selected' : ''}`}
+                onClick={() => setSelectedSlot(slot.id)}
+              >
+                {formatDate(slot.startTime)} {formatTime(slot.startTime)} ({slot.remaining} left)
+              </button>
+            ))}
         </div>
       </div>
 
